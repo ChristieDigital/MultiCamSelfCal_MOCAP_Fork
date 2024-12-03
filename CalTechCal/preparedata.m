@@ -19,4 +19,7 @@ end
 X = datamat(:,1:3)'; % 3D points
 x = datamat(:,5:6)'; % 2D projections
 
+disp(size(X))
+disp(size(x))
+
 return;

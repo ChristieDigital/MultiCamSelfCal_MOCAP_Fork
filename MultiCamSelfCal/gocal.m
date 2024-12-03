@@ -111,6 +111,8 @@ while selfcal.iterate && selfcal.count < config.cal.GLOBAL_ITER_MAX,
   loaded = loaddata(config);
   linear = loaded;		% initalize the linear structure
 
+  disp("DATA LOADED")
+
   CAMS = size(config.cal.cams2use,2);
   FRAMES = size(loaded.IdMat,2);
 

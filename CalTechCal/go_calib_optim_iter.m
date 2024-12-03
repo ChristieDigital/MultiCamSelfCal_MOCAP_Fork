@@ -92,7 +92,7 @@ fprintf(1,'\n');
 
 if ~exist('nx')&~exist('ny'),
     fprintf(1,'WARNING: No image size (nx,ny) available. Setting nx=640 and ny=480. If these are not the right values, change values manually.\n');
-    nx = 640;
+    nx = 752;
     ny = 480;
 end;
 

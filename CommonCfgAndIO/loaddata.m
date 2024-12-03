@@ -26,7 +26,9 @@ USED_MULTIPROC = 0;		% was the multipropcessing used?
 if ~USED_MULTIPROC
   try,
 	Ws	   = load(config.files.points);	% distorted points as found by Im2Points
+	%Ws = Ws'; % TAKE TRANSPOSE WHEN LOADING FOR MOCAP
 	IdMat  = load(config.files.IdMat);	% see function im2points for detailed comments
+	%IdMat = IdMat'; % TAKE TRANSPOSE WHEN LOADING FOR MOCAP
 	%%%
 	% try,load the file with Images resolutions which is on of the output files
 	% from finding LEDs procedure or take the pre-defined resolutions specified in the configdata

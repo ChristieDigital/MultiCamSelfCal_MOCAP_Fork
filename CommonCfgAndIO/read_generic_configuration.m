@@ -27,6 +27,10 @@ if (config_dir(end) ~= '/')
 end
 
 fp = fopen(cfg_filename, 'r');
+if fp == -1
+    % print full config filepath
+	error(strcat('error opening config file ', config_fullpath));
+end
 line_no = 0;
 section = 'No Section';
 config.y = 53;

@@ -1,10 +1,4 @@
-% the main script for the multicamera validation
-% reads the points and the camera matrices
-% and does 3D reconstructions
-% evaluates the reprojection errors
-% to check whether the P matrices still hold or not
-%
-% $Id: gorec.m,v 2.1 2005/05/23 16:22:51 svoboda Exp $
+% do 3d reconstruction using selected camera subgroups
 
 clear all;
 
@@ -14,8 +8,61 @@ addpath ./CoreFunctions
 addpath ./InputOutputFunctions
 addpath ../RansacM; % ./Ransac for mex functions (it is significantly faster for noisy data)
 
+% preliminary parse just to grab the camera indexes shared between subgroups for reprojection
+
+%{
+arg_list = argv();
+for i = 1:numel(arg_list)
+  printf ("Argument %d: %s\n", i, arg_list{i});
+endfor
+%printf(arg_list{2})
+%}
+
+arg_list = argv(); % Get command-line arguments
+for i = 1:numel(arg_list)
+  printf("Argument %d: %s\n", i, arg_list{i}); % Print each argument
+end
+
+% Check for '--indexes=' argument
+found_indexes = 0;
+shared_indexes = []; % Initialize in case it isnt found
+for i = 1:numel(arg_list)
+  arg = arg_list{i};
+  if length(arg) >= 10 && strcmp(arg(1:10), '--indexes=')
+    found_indexes = 1;
+    shared_indexes = arg(11:end); 
+    shared_indexes = str2num(shared_indexes); % Convert to numeric array
+    break;
+  end
+end
+
+% Validate arguments
+if ~found_indexes
+  error('Missing --indexes=[shared camera trio indexes] command-line argument');
+elseif isempty(shared_indexes) || length(shared_indexes) ~= 2 || any(isnan(shared_indexes))
+  error('Invalid format for --indexes. Expected format: --indexes=x,y where x and y are numbers.');
+end
+
+disp('Shared indexes:');
+disp(shared_indexes);
+
+% Further checks after parsing
+if isempty(shared_indexes)
+  error('empty shared indexes')
+end
+
+disp(['Shared indexes: ', mat2str(shared_indexes)]);
+
 % Read configuration from whatever is specified on command-line (via --config=FILENAME)
 config = read_configuration();
+
+
+
+
+% check if empty matrix
+if isempty(shared_indexes)
+  error('empty shared indexes');string.Join(",", shared_indexes)
+end
 
 UNDO_RADIAL = logical(config.cal.UNDO_RADIAL | config.cal.UNDO_HEIKK);
 
@@ -48,7 +95,6 @@ elseif config.cal.UNDO_HEIKK,
   end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Detection of outliers
 % RANSAC is pairwise applied
@@ -69,27 +115,12 @@ for i=1:CAMS,
   [cam(i).K, cam(i).R, cam(i).t, cam(i).C] = P2KRtC(cam(i).P);
 end
 
-% estimate the working volume which is
-% the intersection of the view cones
-disp('Computing maximal possible working volume')
-tic,
-[workingvolume.Xmat,workingvolume.idxisa] = workvolume(cam);
-toc
-% plot3(workingvolume.Xmat(workingvolume.idxisa,1),workingvolume.Xmat(workingvolume.idxisa,2),workingvolume.Xmat(workingvolume.idxisa,3),'.')
-Rmat =[];
-for i=1:CAMS
-	Rmat = [Rmat;cam(i).R];
-end
-drawscene(workingvolume.Xmat(workingvolume.idxisa,:)',[cam(:).C],Rmat,3,'cloud','Maximal working volume',[cam(:).camId]);
-drawnow
-
-
 disp('***********************************************************')
 disp('Computing a robust 3D reconstruction via camera sampling ...')
 % compute a reconstruction robustly
 
 t1 = cputime;
-reconstructed = estimateX(linear,inl.IdMat,cam,config);
+reconstructed = estimateXSpecificCams(linear,inl.IdMat,cam,config,shared_indexes);
 reconstructed.CamIds = config.cal.cams2use(reconstructed.CamIdx);
 t2 = cputime;
 disp(sprintf('Elapsed time for 3D computation: %d minutes %d seconds',floor((t2-t1)/60), round(mod((t2-t1),60))))
@@ -114,60 +145,9 @@ for i=1:CAMS,
   cam(i).std2Derr  = std(cam(i).err2d);
 end
 
-% plot measured and reprojected 2D points
-for i=1:CAMS
-  figure(i+10)
-  clf
-  plot(cam(i).xgt(1,:),cam(i).xgt(2,:),'ro');
-  hold on, grid on
-  plot(cam(i).xgtin(1,:),cam(i).xgtin(2,:),'bo');
-  plot(cam(i).xlin(1,:),cam(i).xlin(2,:),'go');
-  plot(cam(i).xe(1,:),cam(i).xe(2,:),'k+')
-  title(sprintf('measured, o, vs reprojected, +,  2D points (camera: %d)',config.cal.cams2use(i)));
-  for j=1:size(cam(i).visandrec,2); % plot the reprojection errors
-	line([cam(i).xlin(1,cam(i).visandrec(j)),cam(i).xe(1,cam(i).recandvis(j))],[cam(i).xlin(2,cam(i).visandrec(j)),cam(i).xe(2,cam(i).recandvis(j))],'Color','g');
-  end
-  % draw the image boarder
-  line([0 0 0 loaded.Res(i,1) loaded.Res(i,1) loaded.Res(i,1) loaded.Res(i,1) 0],[0 loaded.Res(i,2) loaded.Res(i,2) loaded.Res(i,2) loaded.Res(i,2) 0 0 0],'Color','k','LineWidth',2,'LineStyle','--')
-  axis('equal')
-end
-
-% plot the 3D points
-figure(100),
-clf
-plot3(reconstructed.X(1,:),reconstructed.X(2,:),reconstructed.X(3,:),'*');
-grid on
-
-figure(31)
-clf
-bar(config.cal.cams2use,[cam.mean2Derr;cam.std2Derr]',1.5)
-grid on
-xlabel('Id of the camera')
-title('2D error: mean (blue), std (red)')
-ylabel('pixels')
-
-%%%
-% print the results in a text form
-reconstructed
-
-%%%
-% save the data for non-linear estimation
-% the idea is to apply the caltech non-linear optimization
-% or any other alternative traditional calibration method to the
-% robustly reconstructed points. These 3D points will play the role
-% of a calibration grid.
-%
-% It is also assumed that the majority of the cameras are good to produce
-% acceptable 3D points. Othewise, we are trying to perform the calibration by using
-% a bad calibration grid
-%
-% This assumes sufficient overlap between cameras. No point filling applied
-%
-% 3D-2D correspondences is needed for each camera
 for i=1:CAMS,
   xe = loaded.Ws(i*3-2:i*3, reconstructed.ptsIdx(logical(loaded.IdMat(i,reconstructed.ptsIdx))));
   Xe = reconstructed.X(:, logical(loaded.IdMat(i,reconstructed.ptsIdx)));
   corresp = [Xe',xe'];
   save(sprintf(config.files.points4cal,config.cal.cams2use(i)),'corresp','-ascii');
 end
-

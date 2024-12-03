@@ -13,6 +13,7 @@ clear all;
 
 % TODO: isn't this unnecessary now?
 addpath ../MultiCamSelfCalib/Cfg
+addpath ('../CommonCfgAndIO')
 
 % Read configuration from whatever is specified on command-line (via --config=FILENAME)
 config = read_configuration();
@@ -32,7 +33,7 @@ for i = idxcams,
 	  kc(1:4) = [0,0,0,0];
 	  selfcalib.goradproblem=1;
   else
-	  visualize_distortions
+	  %visualize_distortions
   end
 
   disp(sprintf('***** camera %d **********************************',i))
