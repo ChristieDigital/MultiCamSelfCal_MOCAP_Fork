@@ -1,5 +1,11 @@
 %%% Computes the extrinsic parameters for all the active calibration images
 
+Octave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
+if Octave
+	warning('off', 'Octave:possible-matlab-short-circuit-operator'); % Disable short-circuit operation warning for octave usage
+end
+
 check_active_images;
 
 N_points_views = zeros(1,n_ima);

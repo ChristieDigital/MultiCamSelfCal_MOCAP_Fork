@@ -12,7 +12,7 @@
 clear all;
 
 % TODO: isn't this unnecessary now?
-addpath ../MultiCamSelfCalib/Cfg
+addpath ../MultiCamSelfCal/Cfg
 addpath ('../CommonCfgAndIO')
 
 % Read configuration from whatever is specified on command-line (via --config=FILENAME)
@@ -88,7 +88,7 @@ for i = idxcams,
             KK(1,1), KK(1,2), KK(1,3), ...
             KK(2,1), KK(2,2), KK(2,3), ...
             KK(3,1), KK(3,2), KK(3,3), ...
-            kc(1), kc(2), kc(3), kc(4), 0.0);
+            kc(1), kc(2), 0.0, kc(3), kc(4)); %6th order radial distortion is not considered
 
         % Write the JSON string to the file
         fprintf(fid, '%s', jsonString);

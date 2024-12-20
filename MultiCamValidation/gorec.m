@@ -67,6 +67,8 @@ for i=1:CAMS,
   cam(i).xgtin	   = loaded.Ws(3*i-2:3*i,cam(i).ptsInl);
   cam(i).P		   = loaded.Pmat{i};
   [cam(i).K, cam(i).R, cam(i).t, cam(i).C] = P2KRtC(cam(i).P);
+  disp("--------------")
+  cam(i).K
 end
 
 % estimate the working volume which is
@@ -75,7 +77,7 @@ disp('Computing maximal possible working volume')
 tic,
 [workingvolume.Xmat,workingvolume.idxisa] = workvolume(cam);
 toc
-% plot3(workingvolume.Xmat(workingvolume.idxisa,1),workingvolume.Xmat(workingvolume.idxisa,2),workingvolume.Xmat(workingvolume.idxisa,3),'.')
+%plot3(workingvolume.Xmat(workingvolume.idxisa,1),workingvolume.Xmat(workingvolume.idxisa,2),workingvolume.Xmat(workingvolume.idxisa,3),'.')
 Rmat =[];
 for i=1:CAMS
 	Rmat = [Rmat;cam(i).R];
@@ -118,14 +120,14 @@ end
 for i=1:CAMS
   figure(i+10)
   clf
-  plot(cam(i).xgt(1,:),cam(i).xgt(2,:),'ro');
+  plot(cam(i).xgt(1,:),cam(i).xgt(2,:),'r.');
   hold on, grid on
-  plot(cam(i).xgtin(1,:),cam(i).xgtin(2,:),'bo');
-  plot(cam(i).xlin(1,:),cam(i).xlin(2,:),'go');
-  plot(cam(i).xe(1,:),cam(i).xe(2,:),'k+')
+  plot(cam(i).xgtin(1,:),cam(i).xgtin(2,:),'b.');
+  plot(cam(i).xlin(1,:),cam(i).xlin(2,:),'g.');
+  plot(cam(i).xe(1,:),cam(i).xe(2,:),'k.')
   title(sprintf('measured, o, vs reprojected, +,  2D points (camera: %d)',config.cal.cams2use(i)));
   for j=1:size(cam(i).visandrec,2); % plot the reprojection errors
-	line([cam(i).xlin(1,cam(i).visandrec(j)),cam(i).xe(1,cam(i).recandvis(j))],[cam(i).xlin(2,cam(i).visandrec(j)),cam(i).xe(2,cam(i).recandvis(j))],'Color','g');
+	line([cam(i).xlin(1,cam(i).visandrec(j)),cam(i).xe(1,cam(i).recandvis(j))],[cam(i).xlin(2,cam(i).visandrec(j)),cam(i).xe(2,cam(i).recandvis(j))],'Color','r');
   end
   % draw the image boarder
   line([0 0 0 loaded.Res(i,1) loaded.Res(i,1) loaded.Res(i,1) loaded.Res(i,1) 0],[0 loaded.Res(i,2) loaded.Res(i,2) loaded.Res(i,2) loaded.Res(i,2) 0 0 0],'Color','k','LineWidth',2,'LineStyle','--')
@@ -135,8 +137,15 @@ end
 % plot the 3D points
 figure(100),
 clf
-plot3(reconstructed.X(1,:),reconstructed.X(2,:),reconstructed.X(3,:),'*');
+plot3(reconstructed.X(1,:),reconstructed.X(2,:),reconstructed.X(3,:),'.');
+for i=1:CAMS,
+  hold on
+  %plot3(cam(i).C(1),cam(i).C(2),cam(i).C(3),'ro');
+  drawcloud(cam(i).C, figure(100), 'b');
+end
 grid on
+
+
 
 figure(31)
 clf
@@ -145,6 +154,8 @@ grid on
 xlabel('Id of the camera')
 title('2D error: mean (blue), std (red)')
 ylabel('pixels')
+ 
+pause 
 
 %%%
 % print the results in a text form

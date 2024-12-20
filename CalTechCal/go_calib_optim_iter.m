@@ -33,6 +33,12 @@
 %In the future, a more general function will be there.
 %For now, if using a 3D calibration rig, quick_init is set to 1 for an easy initialization of the focal length
 
+Octave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
+
+if Octave
+	warning('off', 'Octave:possible-matlab-short-circuit-operator'); % Disable short-circuit operation warning for octave usage
+end
+
 if ~exist('initFOV')
 	initFOV = 70; % Initial camera field of view in degrees % initially 35
 end
@@ -92,8 +98,8 @@ fprintf(1,'\n');
 
 if ~exist('nx')&~exist('ny'),
     fprintf(1,'WARNING: No image size (nx,ny) available. Setting nx=640 and ny=480. If these are not the right values, change values manually.\n');
-    nx = 752;
-    ny = 480;
+    nx = 2464;
+    ny = 2056;
 end;
 
 

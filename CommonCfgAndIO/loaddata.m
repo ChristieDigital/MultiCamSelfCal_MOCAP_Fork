@@ -26,9 +26,9 @@ USED_MULTIPROC = 0;		% was the multipropcessing used?
 if ~USED_MULTIPROC
   try,
 	Ws	   = load(config.files.points);	% distorted points as found by Im2Points
-	%Ws = Ws'; % TAKE TRANSPOSE WHEN LOADING FOR MOCAP
+	Ws = Ws'; % TAKE TRANSPOSE WHEN LOADING FOR MOCAP
 	IdMat  = load(config.files.IdMat);	% see function im2points for detailed comments
-	%IdMat = IdMat'; % TAKE TRANSPOSE WHEN LOADING FOR MOCAP
+	IdMat = IdMat'; % TAKE TRANSPOSE WHEN LOADING FOR MOCAP
 	%%%
 	% try,load the file with Images resolutions which is on of the output files
 	% from finding LEDs procedure or take the pre-defined resolutions specified in the configdata
@@ -80,7 +80,7 @@ end
 try,config.files.idxcams = [config.files.idxcams,config.files.idxproj]; catch, config.files.idxcams; end
 
 if size(Ws,1)/3 ~= size(config.files.idxcams,2)
-	error('Problem in loading points data. Less or more data than expected found')
+	error('Problem in loading points data. Less or more data than expected found', size(Ws,1)/3)
 end
 
 

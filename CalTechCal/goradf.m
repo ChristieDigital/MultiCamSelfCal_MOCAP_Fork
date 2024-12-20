@@ -13,6 +13,10 @@ function selfcalib = goradf(config,par2estimate,INL_TOL)
 
 Octave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
+if Octave
+	warning('off', 'Octave:possible-matlab-short-circuit-operator'); % Disable short-circuit operation warning for octave usage
+end
+
 % assignment of the parameters to estimate
 initFOV = par2estimate(1);
 center_optim = par2estimate(2);

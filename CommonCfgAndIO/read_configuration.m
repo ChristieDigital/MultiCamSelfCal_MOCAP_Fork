@@ -105,7 +105,7 @@ try, config.cal.USE_NTH_FRAME;	      catch,  config.cal.USE_NTH_FRAME = 1;end	% 
 try, config.files.imgext;  catch,  config.files.imgext	= 'jpg'; end;
 
 % image resolution
-try, config.imgs.res; catch, config.imgs.res		  = [640,480];	end;
+try, config.imgs.res; catch, config.imgs.res		  = [2464,2056];	end;
 
 % scale for the subpixel accuracy
 % 1/3 is a good compromise between speed and accuracy

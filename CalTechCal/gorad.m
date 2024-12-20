@@ -12,7 +12,7 @@
 clear all;
 
 % TODO: isn't this unnecessary now?
-addpath ../MultiCamSelfCalib/Cfg
+addpath ../MultiCamSelfCal/Cfg
 addpath ('../CommonCfgAndIO')
 
 % Read configuration from whatever is specified on command-line (via --config=FILENAME)

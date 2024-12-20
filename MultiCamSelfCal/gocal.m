@@ -13,6 +13,11 @@ clear variables globals
 
 Octave = exist('OCTAVE_VERSION', 'builtin') ~= 0;
 
+global warning_state = 0
+if Octave
+	warning('off', 'Octave:possible-matlab-short-circuit-operator'); % Disable short-circuit operation warning for octave usage
+end
+
 % add necessary paths
 addpath ('../CommonCfgAndIO')
 addpath ('../RadialDistortions')
@@ -159,6 +164,8 @@ while selfcal.iterate && selfcal.count < config.cal.GLOBAL_ITER_MAX,
   %  disp('****************************************************************************')
   disp(sprintf('RANSAC validation step running with tolerance threshold: %2.2f ...',INL_TOL));
 
+  addpath ('./CoreFunctions')
+
   inliers.IdMat = findinl(linear.Ws,linear.IdMat,INL_TOL);
 
   addpath ('./MartinecPajdla');
@@ -228,6 +235,7 @@ while selfcal.iterate && selfcal.count < config.cal.GLOBAL_ITER_MAX,
 	%
 	disp(sprintf('Number of detected outliers: %3d',outliers))
 	disp('About cameras (Id, 2D reprojection error, #inliers):')
+	addpath ('./OutputFunctions')
 	dispcamstats(cam,inliers);
 	% [[cam(:).camId]',[cam(:).std2Derr]',[cam(:).mean2Derr]', sum(inliers.IdMat')']
 	disp('***************************************************************')
@@ -357,6 +365,8 @@ while selfcal.iterate && selfcal.count < config.cal.GLOBAL_ITER_MAX,
   % Evaluate reprojection error
   %%%
   cam = evalreprerror(cam,config);
+
+
 
   %%%%
   % Save the 2D-3D correpondences for further processing

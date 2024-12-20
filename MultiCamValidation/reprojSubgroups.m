@@ -10,13 +10,6 @@ addpath ../RansacM; % ./Ransac for mex functions (it is significantly faster for
 
 % preliminary parse just to grab the camera indexes shared between subgroups for reprojection
 
-%{
-arg_list = argv();
-for i = 1:numel(arg_list)
-  printf ("Argument %d: %s\n", i, arg_list{i});
-endfor
-%printf(arg_list{2})
-%}
 
 arg_list = argv(); % Get command-line arguments
 for i = 1:numel(arg_list)
@@ -26,13 +19,23 @@ end
 % Check for '--indexes=' argument
 found_indexes = 0;
 shared_indexes = []; % Initialize in case it isnt found
+disable_plots = 0;   % Default is to allow plotting
+
 for i = 1:numel(arg_list)
   arg = arg_list{i};
+  
+  % Check for '--indexes=' argument
   if length(arg) >= 10 && strcmp(arg(1:10), '--indexes=')
     found_indexes = 1;
     shared_indexes = arg(11:end); 
     shared_indexes = str2num(shared_indexes); % Convert to numeric array
-    break;
+    continue;
+  end
+  
+  % Check for '--disable-plots' argument
+  if strcmp(arg, '--disable-plots')
+    disable_plots = 1;
+    continue;
   end
 end
 
@@ -42,6 +45,7 @@ if ~found_indexes
 elseif isempty(shared_indexes) || length(shared_indexes) ~= 2 || any(isnan(shared_indexes))
   error('Invalid format for --indexes. Expected format: --indexes=x,y where x and y are numbers.');
 end
+
 
 disp('Shared indexes:');
 disp(shared_indexes);
@@ -143,6 +147,41 @@ for i=1:CAMS,
   cam(i).err2d	 = sqrt(sum([cam(i).xe(1:2,cam(i).recandvis) - cam(i).xlin(1:2,cam(i).visandrec)].^2));
   cam(i).mean2Derr = mean(cam(i).err2d);
   cam(i).std2Derr  = std(cam(i).err2d);
+end
+
+% plot measured and reprojected 2D points
+if ~disable_plots
+	for i=1:CAMS
+	  figure(i+10)
+	  clf
+	  plot(cam(i).xgt(1,:),cam(i).xgt(2,:),'r.');
+	  hold on, grid on
+	  plot(cam(i).xgtin(1,:),cam(i).xgtin(2,:),'b.');
+	  plot(cam(i).xlin(1,:),cam(i).xlin(2,:),'g.');
+	  plot(cam(i).xe(1,:),cam(i).xe(2,:),'k.')
+	  title(sprintf('measured, o, vs reprojected, +,  2D points (camera: %d)',config.cal.cams2use(i)));
+	  for j=1:size(cam(i).visandrec,2); % plot the reprojection errors
+		line([cam(i).xlin(1,cam(i).visandrec(j)),cam(i).xe(1,cam(i).recandvis(j))],[cam(i).xlin(2,cam(i).visandrec(j)),cam(i).xe(2,cam(i).recandvis(j))],'Color','r');
+	  end
+	  % draw the image boarder
+	  line([0 0 0 loaded.Res(i,1) loaded.Res(i,1) loaded.Res(i,1) loaded.Res(i,1) 0],[0 loaded.Res(i,2) loaded.Res(i,2) loaded.Res(i,2) loaded.Res(i,2) 0 0 0],'Color','k','LineWidth',2,'LineStyle','--')
+	  axis('equal')
+	end
+
+	% plot the 3D points
+	size(reconstructed.X)
+	figure(100),
+	clf
+	plot3(reconstructed.X(1,:),reconstructed.X(2,:),reconstructed.X(3,:),'.');
+	for i=1:CAMS,
+	  hold on
+	  %plot3(cam(i).C(1),cam(i).C(2),cam(i).C(3),'ro');
+	  drawcloud(cam(i).C, figure(100), 'b');
+	end
+	grid on
+
+	pause
+
 end
 
 for i=1:CAMS,

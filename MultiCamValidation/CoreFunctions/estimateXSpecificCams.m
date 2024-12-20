@@ -19,7 +19,7 @@
 
 function reconstructed = estimateXSpecificCams(data,IdMat,cam,config,shared_indexes)
 
-SS = config.cal.NTUPLES; % sample size
+SS = 2; % sample size- always two cameras to get the shared reconstruction
 MIN_POINTS = config.cal.MIN_PTS_VAL; % minimal number of correnspondences in the sample
 
 Ws   = data.Ws;
